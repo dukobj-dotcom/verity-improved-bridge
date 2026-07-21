@@ -501,6 +501,18 @@ heartbeatInterval.unref();
 
 setInterval(cleanupSessions, 10 * 60 * 1000).unref();
 
-server.listen(PORT, () => {
+// Self-ping every 14 minutes to prevent Render free tier from sleeping.
+// Render sleeps after 15 minutes of no HTTP traffic.
+// Minecraft Bedrock times out in ~2-3 seconds - if server is sleeping, connection fails.
+const SELF_URL = process.env.RENDER_EXTERNAL_URL || process.env.RAILWAY_STATIC_URL || null;
+if (SELF_URL) {
+  setInterval(() => {
+    try {
+      fetch(`${SELF_URL}/api/status`).catch(() => {});
+    } catch {}
+  }, 14 * 60 * 1000).unref();
+}
+
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`VERITY bridge listening on ${PORT}`);
 });
