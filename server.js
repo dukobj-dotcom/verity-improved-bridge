@@ -182,7 +182,7 @@ function createSession(apiKey, model) {
     const oldest = [...sessions.values()].sort((a, b) => a.lastSeen - b.lastSeen)[0];
     if (oldest) closeSession(oldest.id);
   }
-  const id = createSessionToken(apiKey, model);
+  const id = crypto.randomBytes(6).toString("hex");
   const session = makeSession(id, apiKey, model);
   sessions.set(id, session);
   return session;
