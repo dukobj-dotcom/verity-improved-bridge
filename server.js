@@ -79,7 +79,13 @@ function publicUrl(req) {
 }
 
 function wsUrl(req, sessionId) {
-  return `${publicUrl(req).replace(/^http/i, "ws")}/ws/${sessionId}`;
+  let url = publicUrl(req).replace(/^http/i, "ws");
+  if (url.startsWith("wss://") && !/:\d+$/.test(url.split("/")[2])) {
+    const parts = url.split("/");
+    parts[2] = parts[2] + ":443";
+    url = parts.join("/");
+  }
+  return `${url}/ws/${sessionId}`;
 }
 
 function compact(value, max = 700) {
