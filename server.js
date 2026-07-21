@@ -475,7 +475,6 @@ wss.on("connection", (ws) => {
   setTimeout(() => {
     if (ws.readyState === 1) {
       subscribe(ws, "PlayerMessage");
-      subscribe(ws, "PlayerChat");
     }
   }, 300);
 });
