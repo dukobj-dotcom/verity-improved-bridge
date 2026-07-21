@@ -398,7 +398,15 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-const wss = new WebSocketServer({ noServer: true });
+const wss = new WebSocketServer({
+  noServer: true,
+  handleProtocols: (protocols) => {
+    if (protocols && protocols.size > 0) {
+      return Array.from(protocols)[0];
+    }
+    return false;
+  },
+});
 
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url, "http://localhost");
