@@ -74,7 +74,8 @@ function readBody(req) {
 
 function publicUrl(req) {
   const proto = req.headers["x-forwarded-proto"] || (req.socket?.encrypted ? "https" : "http");
-  const host = req.headers["x-forwarded-host"] || req.headers.host || `127.0.0.1:${PORT}`;
+  let host = req.headers["x-forwarded-host"] || req.headers.host || `127.0.0.1:${PORT}`;
+  host = host.replace(/^localhost/i, "127.0.0.1");
   return `${proto}://${host}`;
 }
 
