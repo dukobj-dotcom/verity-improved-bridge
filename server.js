@@ -393,6 +393,21 @@ const server = http.createServer(async (req, res) => {
       const session = createSession(apiKey, model);
       return json(res, 200, { ok: true, sessionId: session.id, connectUrl: wsUrl(req, session.id), command: `/connect ${wsUrl(req, session.id)}`, expiresInMs: SESSION_TTL_MS });
     }
+    if (req.method === "POST" && url.pathname === "/api/chat") {
+      const body = JSON.parse(await readBody(req) || "{}");
+      const player = String(body.player || "Player");
+      const message = String(body.message || "");
+      const apiKey = String(body.groqApiKey || body.apiKey || process.env.GROQ_API_KEY || "").trim();
+      const model = String(body.model || DEFAULT_MODEL).trim();
+
+      if (!apiKey || !apiKey.startsWith("gsk_")) {
+        return json(res, 400, { ok: false, error: "missing_or_invalid_groq_key" });
+      }
+
+      const tempSession = { apiKey, model, histories: new Map() };
+      const decision = await groqDecision(tempSession, player, message);
+      return json(res, 200, { ok: true, player, ...decision });
+    }
     if (req.method === "DELETE" && url.pathname.startsWith("/api/session/")) {
       closeSession(url.pathname.split("/").pop());
       return json(res, 200, { ok: true });
