@@ -149,13 +149,12 @@ function sessionFor(id) {
   let session = sessions.get(id);
   if (!session) {
     const token = readSessionToken(id);
-    if (!token) return null;
-    session = makeSession(id, token.apiKey, token.model, token.createdAt);
+    if (token) {
+      session = makeSession(id, token.apiKey, token.model, token.createdAt);
+    } else {
+      session = makeSession(id, "", DEFAULT_MODEL);
+    }
     sessions.set(id, session);
-  }
-  if (Date.now() - session.lastSeen > SESSION_TTL_MS) {
-    closeSession(id);
-    return null;
   }
   session.lastSeen = Date.now();
   return session;
@@ -410,16 +409,12 @@ const wss = new WebSocketServer({
 
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url, "http://localhost");
-  const match = /^\/ws\/([A-Za-z0-9_-]+)$/.exec(url.pathname);
-  if (!match) {
-    socket.destroy();
-    return;
+  let sessionId = "default";
+  const match = /^\/ws\/?([A-Za-z0-9_-]*)$/.exec(url.pathname);
+  if (match && match[1]) {
+    sessionId = match[1];
   }
-  const session = sessionFor(match[1]);
-  if (!session) {
-    socket.destroy();
-    return;
-  }
+  const session = sessionFor(sessionId);
   wss.handleUpgrade(req, socket, head, (ws) => {
     ws.session = session;
     wss.emit("connection", ws, req);
